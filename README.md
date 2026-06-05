@@ -1,189 +1,270 @@
-# TalentDash — Full-Stack Trial Submission
+# TalentDash — Full Stack Salary Intelligence Platform
+link : https://talentdash-3t6txecp4-aditijar13-6440s-projects.vercel.app/
 
-**Stack:** Next.js 15 · TypeScript · Tailwind CSS · Prisma · Neon PostgreSQL
+**Tech Stack:** Next.js 15 · TypeScript · Tailwind CSS · Prisma · PostgreSQL (Neon)
 
 ---
 
-## Running Locally in Under 5 Minutes
+## 🚀 Quick Start (Local Setup in Minutes)
 
 ### 1. Install dependencies
+
 ```bash
 npm install --ignore-scripts
 npx prisma generate
 ```
 
-### 2. Set environment variables
+### 2. Environment setup
+
 ```bash
 cp .env.example .env
-# Edit .env and set DATABASE_URL to your Neon PostgreSQL connection string
 ```
 
-### 3. Run migrations and seed
+Update `.env` with your PostgreSQL (Neon) connection string.
+
+---
+
+### 3. Run database migrations & seed data
+
 ```bash
 npx prisma migrate dev --name init
 npm run db:seed
-# Seeds 62 salary records across 12 companies
 ```
 
-### 4. Start dev server
+This initializes the database with **62 sample salary records across 12 companies**.
+
+---
+
+### 4. Start development server
+
 ```bash
 npm run dev
-# Visit http://localhost:3000
 ```
 
-> **No database?** The app works fully on mock data (62 records in lib/mock-data.ts). Skip steps 1-3 of DB setup. All pages, filters, and APIs work immediately.
+Open:
+
+```
+http://localhost:3000
+```
 
 ---
 
-## Environment Variables
+### ⚡ No Database Mode (Mock Data Fallback)
 
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | For DB features | Neon PostgreSQL connection string |
-| `NEXT_PUBLIC_APP_URL` | Yes | Public URL for OpenGraph / canonical tags |
+If you don’t configure a database, the app still works fully using local mock data (`lib/mock-data.ts`).
+
+All features including:
+
+* salary listing
+* filtering
+* comparison
+* API responses
+
+work without DB setup.
 
 ---
 
-## Project Structure
+## 🔐 Environment Variables
+
+| Variable            | Required               | Purpose                             |
+| ------------------- | ---------------------- | ----------------------------------- |
+| DATABASE_URL        | Optional (for DB mode) | PostgreSQL connection string (Neon) |
+| NEXT_PUBLIC_APP_URL | Required               | Public app URL for metadata / SEO   |
+
+---
+
+## 📁 Project Structure
 
 ```
 app/
-  page.tsx                    # Homepage (ISR 1h)
-  salaries/page.tsx           # /salaries (Dynamic RSC, URL-encoded filters)
-  companies/page.tsx          # /companies (ISR 1h)
-  companies/[slug]/page.tsx   # /companies/[slug] (Static SSG)
-  compare/page.tsx            # /compare (Static shell + client hydration)
-  api/ingest-salary/          # POST — validate, normalise, recompute TC
-  api/salaries/               # GET — filter, sort, paginate (max 100)
-  api/companies/[slug]/       # GET — metadata + median + level distribution
-  api/compare/                # GET — delta between two records
+  page.tsx                    → Homepage (ISR cached)
+  salaries/page.tsx          → Salary explorer (server-rendered filters)
+  companies/page.tsx         → Company listing (ISR cached)
+  companies/[slug]/page.tsx  → Company profile (SSG)
+  compare/page.tsx           → Salary comparison tool (client-driven)
+
+  api/
+    salaries/                → Filtering, sorting, pagination API
+    companies/[slug]/       → Company stats + analytics
+    compare/                → Record comparison API
+    ingest-salary/          → Salary validation + normalization API
+
 components/
-  ui/                         # LevelBadge, SourceBadge, StatCard, LevelDistributionBar, Navbar
-  features/                   # SalaryFilters, SalaryPagination, SalarySort, CompareClient
+  ui/                        → Reusable UI components (badges, cards, navbar)
+  features/                 → Feature modules (filters, pagination, compare UI)
+
 lib/
-  db.ts                       # Prisma singleton
-  mock-data.ts                # 62 records + computeMedian, getLevelDistribution
-  currency.ts                 # INR/USD/GBP/EUR conversion + formatting
-  levels.ts                   # Level badge colours, display names, tier mapping
-  validation.ts               # Ingest validation + company name normalisation
-types/index.ts                # All TypeScript interfaces matching integration contract
+  db.ts                     → Prisma singleton client
+  mock-data.ts             → In-memory dataset (62 records)
+  currency.ts              → Multi-currency formatting utilities
+  levels.ts                → Role level mapping + styling logic
+  validation.ts            → Input validation + normalization rules
+
 prisma/
-  schema.prisma               # Full schema — Company + Salary + all enums + indexes
-  seed.ts                     # 62-record seed with normalisation demo
+  schema.prisma            → Database schema (Company, Salary, enums)
+  seed.ts                  → Seed script for demo dataset
+
+types/
+  index.ts                 → Shared TypeScript interfaces
 ```
 
 ---
 
-## API Reference
+## 🔌 API Overview
 
-### POST /api/ingest-salary
-Validates all fields, normalises company name, **always recomputes** `total_compensation = base + bonus + stock` server-side.
+### ➤ POST `/api/ingest-salary`
 
-```bash
-curl -X POST http://localhost:3000/api/ingest-salary \
-  -H "Content-Type: application/json" \
-  -d '{
-    "company": "Google India",
-    "role": "Software Engineer",
-    "level": "L4",
-    "location": "Bengaluru",
-    "currency": "INR",
-    "experience_years": 4,
-    "base_salary": 3200000,
-    "bonus": 640000,
-    "stock": 1200000,
-    "source": "CONTRIBUTOR",
-    "confidence_score": 0.95
-  }'
-```
+Validates incoming salary data and always recalculates total compensation server-side.
 
-**Hard rejections:**
-- `level = "Senior Software Engineer"` → 400 (must be enum: L3, L4, L5, L6, SDE_I, SDE_II, SDE_III, STAFF, PRINCIPAL, IC4, IC5)
-- `base_salary <= 0` → 400
-- `experience_years < 1 or > 50` → 400
-- `confidence_score` outside 0–1 → 400
-- Duplicate (same company+role+level+location, base ±10%, last 48h) → 409
+Key rules:
 
-### GET /api/salaries
+* Invalid role levels rejected (must match enum)
+* Salary must be positive
+* Experience limited between 1–50 years
+* Confidence score must be 0–1
+* Duplicate entries within 48 hours are blocked
+
+---
+
+### ➤ GET `/api/salaries`
+
+Supports filtering, sorting, and pagination:
+
 ```
 ?company=google&role=engineer&level=L4&location=Bengaluru
 &sort=total_comp_desc&page=1&limit=25
 ```
-Limit capped at 100. `Cache-Control: s-maxage=300, stale-while-revalidate=3600`.
 
-### GET /api/companies/:slug
-Returns metadata + salaries + `median_total_compensation` (true statistical median, not average) + `level_distribution`.
-`Cache-Control: s-maxage=3600, stale-while-revalidate=86400`.
-
-### GET /api/compare?s1=:id&s2=:id
-Returns both records + `{ base_delta, bonus_delta, stock_delta, tc_delta, experience_delta }`.
-400 if IDs are identical. 404 if either not found.
+* Max limit: 100
+* Server-side filtering optimized with indexes
+* CDN cache: 5 minutes
 
 ---
 
-## Architecture Decisions
+### ➤ GET `/api/companies/:slug`
 
-### Rendering strategy per page
+Returns:
 
-| Page | Strategy | Why |
-|---|---|---|
-| Homepage | ISR (1h) | Trending data changes daily. Too dynamic for full static. |
-| /companies | ISR (1h) | Rarely changes but shouldn't go fully stale. |
-| /companies/[slug] | **Static SSG** | Core SEO asset. Pre-built at deploy time via `generateStaticParams`. Zero compute cost per request. New company → next deploy adds page automatically. |
-| /salaries | Dynamic RSC | Filter+pagination is query-specific — can't prebuilt all combinations. RSC means zero client JS for data rendering. |
-| /compare | Static shell + client | UI is static. Selection and delta logic runs client-side. |
-| /api/* | Dynamic | Always fresh. CDN-cached via response headers. |
+* company metadata
+* salary records
+* median compensation
+* level-wise distribution
 
-### Why page-based not cursor-based pagination
+Cache:
 
-Page-based: shareable URLs (`?page=3`), SEO-crawlable, simpler. At MVP scale (<100k records) with proper composite indexes `(company_id, level, location)`, offset pagination is fast. At 1M+ records, cursor pagination would be better for deep pages — a known trade-off, documented here.
-
-### What I would build differently with more time
-
-1. **Live DB connection**: All API routes have the Prisma DB code written but commented — one env var activates it. The integration is complete.
-2. **ISR revalidation trigger**: `POST /api/ingest-salary` should call `revalidatePath('/salaries')` + Cloudflare cache purge after insert.
-3. **Individual salary pages**: `/salaries/software-engineer/amazon/bengaluru` as true static pages via `generateStaticParams` — the high-SEO-value long-tail pages.
-4. **Typesense search**: PostgreSQL ILIKE works for MVP. Typesense adds typo tolerance + autocomplete when needed.
-
-### What I cut and why
-
-- **Auth (Clerk)**: No auth per task spec — intentionally open.
-- **Review/Interview pages**: Frontend scaffolded in nav. Backend schema extensible. Cut to ship salary + compare correctly.
-- **Workplace Index scoring**: Composite algorithm is complex — not worth rushing in 72h.
-- **Mobile PWA**: Responsive web is complete. Native app is Phase 2.
-
-### Cache TTL reasoning
-
-- `/api/salaries` → `s-maxage=300` (5 min): Salary data can be slightly stale. New submissions appear within 5 min.
-- `/api/companies/:slug` → `s-maxage=3600` (1h): Company metadata changes rarely. 1h stale is acceptable.
+* 1 hour edge caching
+* 24 hour stale revalidation
 
 ---
 
-## Data Integrity
+### ➤ GET `/api/compare`
 
-1. `total_compensation` **always recomputed** server-side — client value stripped
-2. Company normalisation: "Google India Pvt. Ltd." / "GOOGLE" / "google " all → slug `google`
-3. Level is validated as enum — "Senior Software Engineer" returns 400
-4. Duplicate detection: same company+role+level+location+base (±10%) within 48h → 409
-5. Per-field error responses — never a generic error string
+Compares two salary records:
 
-## Normalisation Examples (from seed.ts)
+```
+?s1=id1&s2=id2
+```
 
-| Raw Input | Normalised Slug |
-|---|---|
-| "Google India Pvt. Ltd." | google |
-| "GOOGLE" | google |
-| "Google " (trailing space) | google |
-| "Tata Consultancy Services" | tcs |
-| "TCS Ltd." | tcs |
-| "amazon.com" | amazon |
-| "Wipro Technologies" | wipro |
-| "Infosys BPO" | infosys |
+Returns:
+
+* base, bonus, stock differences
+* total compensation delta
+* experience difference
 
 ---
 
-## The Hardest Decision
+## 🧠 Architecture Decisions
 
-**Rendering strategy for /salaries.** The spec says salary pages should be static (core SEO asset). But filter+pagination means millions of URL combinations — full static generation is impossible. 
+### Rendering Strategy
 
-Resolution: `/salaries` is a dynamic RSC (reads mock data at request time on the server, ships **zero** client JS for data rendering, only hydrates filter controls). In production, data comes from a CDN-cached API response. The individual high-value long-tail pages (`/salaries/software-engineer/amazon/bengaluru`) would be true SSG pages — this is the next build milestone after MVP.
+| Route             | Strategy    | Reason                               |
+| ----------------- | ----------- | ------------------------------------ |
+| /                 | ISR         | homepage changes moderately          |
+| /companies        | ISR         | low volatility                       |
+| /companies/[slug] | SSG         | SEO-critical pages                   |
+| /salaries         | Dynamic RSC | filters create infinite combinations |
+| /compare          | Client-side | UI only, no heavy server logic       |
+
+---
+
+## 📊 Pagination Approach
+
+Used **page-based pagination** instead of cursor-based because:
+
+* URLs are shareable and SEO-friendly
+* Simpler implementation for MVP
+* Works efficiently under ~100k records with indexing
+
+Cursor pagination would be considered at large scale (1M+ records).
+
+---
+
+## ⚙️ Key Engineering Decisions
+
+* Total compensation is **always computed on server**
+* Company names are normalized into consistent slugs
+* Strict enum validation for job levels
+* Duplicate detection prevents repeated submissions
+* API responses are cache-optimized using CDN headers
+
+---
+
+## 🧪 Data Normalization Examples
+
+| Input                     | Normalized |
+| ------------------------- | ---------- |
+| Google India Pvt Ltd      | google     |
+| GOOGLE                    | google     |
+| Tata Consultancy Services | tcs        |
+| TCS Ltd                   | tcs        |
+| amazon.com                | amazon     |
+| Infosys BPO               | infosys    |
+
+---
+
+## 🚧 Trade-offs & Future Improvements
+
+### What was intentionally not included
+
+* Authentication system (kept open for simplicity)
+* Advanced interview/workplace scoring system
+* PWA/mobile app layer
+
+### Future enhancements
+
+* Full DB-powered live ingestion pipeline
+* ISR revalidation on new salary submission
+* SEO-rich individual salary pages
+* Advanced search (Typesense / ElasticSearch)
+* Performance scoring engine for companies
+
+---
+
+## 💡 Key Product Decision
+
+The `/salaries` page is intentionally **server-rendered with dynamic filtering** instead of fully static generation.
+
+Why:
+
+* Filter combinations are infinite
+* Full static generation is not feasible
+* RSC ensures minimal client-side JavaScript
+* API layer allows CDN caching in production
+
+Future evolution:
+→ Generate high-value SEO pages like:
+`/salaries/software-engineer/google/bengaluru` using SSG
+
+---
+
+## 🏁 Summary
+
+TalentDash is a scalable salary intelligence platform designed with:
+
+* SEO-first architecture
+* Server-heavy data validation
+* Minimal client-side overhead
+* Strong type safety with TypeScript
+* Production-ready Prisma schema design
+
+It is built to scale from MVP → full production analytics platform with minimal refactoring.
