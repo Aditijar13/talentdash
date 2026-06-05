@@ -1,0 +1,233 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --coral: #FF5A5F;
+  --coral-dark: #E04E53;
+  --coral-light: rgba(255,90,95,0.15);
+  --deep-text: #F1F1F1;
+  --body-text: #C0C0C8;
+  --muted-text: #888898;
+  --surface: #1A1A2A;
+  --surface2: #13131F;
+  --app-bg: #0D0D1A;
+  --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(255,255,255,0.16);
+  --success: #22C55E;
+  --warning: #FFB400;
+  --error: #D93025;
+  --hover: rgba(255,255,255,0.04);
+  --data-blue: #60A5FA;
+  --data-blue-light: rgba(96,165,250,0.12);
+  --card-bg: rgba(255,255,255,0.04);
+  --card-hover: rgba(255,255,255,0.07);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--app-bg);
+  color: var(--deep-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* ─── WebGL canvas background ─── */
+#webgl-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Everything sits above webgl */
+body > * { position: relative; z-index: 1; }
+
+/* ─── Animated hero background ─── */
+.hero-animated-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Floating orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: orbFloat 16s ease-in-out infinite;
+}
+.orb-1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(255,90,95,0.18) 0%, transparent 70%);
+  top: -150px; right: 5%;
+  animation-delay: 0s;
+}
+.orb-2 {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(96,165,250,0.14) 0%, transparent 70%);
+  top: 30%; right: -80px;
+  animation-delay: -5s;
+}
+.orb-3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%);
+  bottom: -80px; left: 15%;
+  animation-delay: -9s;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  33%  { transform: translateY(-40px) translateX(20px); }
+  66%  { transform: translateY(25px) translateX(-15px); }
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface2); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+::selection { background: rgba(255,90,95,0.3); color: #fff; }
+
+/* ─── Table rows ─── */
+.salary-row { transition: background 0.12s ease; }
+.salary-row:hover { background: var(--hover); }
+
+/* ─── Card interactions ─── */
+.card-lift { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease; }
+.card-lift:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
+
+/* ─── Company logo avatar ─── */
+.company-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  border-radius: 14px;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  overflow: hidden;
+  background: rgba(255,255,255,0.07);
+}
+.company-logo img {
+  object-fit: contain;
+  display: block;
+}
+
+/* ─── Glass card ─── */
+.glass-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* ─── Gradient text ─── */
+.gradient-text {
+  background: linear-gradient(135deg, #FF5A5F 0%, #FF8C42 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Fade in ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.35s ease forwards; }
+
+/* ─── Pulse dot ─── */
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.6; }
+}
+.pulse-dot { animation: pulseDot 2s ease-in-out infinite; }
+
+/* ─── Dark card ─── */
+.dark-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.dark-card:hover {
+  background: var(--card-hover);
+  border-color: var(--border-hover);
+}
+
+/* ─── Topographic lines overlay ─── */
+.topo-bg {
+  position: relative;
+}
+.topo-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cpath d='M0,200 Q200,150 400,200 T800,200' stroke='rgba(255,255,255,0.03)' fill='none' stroke-width='1'/%3E%3Cpath d='M0,300 Q200,250 400,300 T800,300' stroke='rgba(255,255,255,0.03)' fill='none' stroke-width='1'/%3E%3Cpath d='M0,400 Q200,350 400,400 T800,400' stroke='rgba(255,255,255,0.025)' fill='none' stroke-width='1'/%3E%3Cpath d='M0,500 Q200,450 400,500 T800,500' stroke='rgba(255,255,255,0.02)' fill='none' stroke-width='1'/%3E%3Cpath d='M0,100 Q200,50 400,100 T800,100' stroke='rgba(255,255,255,0.025)' fill='none' stroke-width='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+.topo-bg > * { position: relative; z-index: 1; }
+
+/* ─── Footer ─── */
+.footer-gradient {
+  background: linear-gradient(180deg, #0D0D1A 0%, #080810 100%);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ─── Input dark ─── */
+.input-dark {
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.10);
+  color: #F1F1F1;
+  transition: border-color 0.2s;
+}
+.input-dark::placeholder { color: rgba(255,255,255,0.35); }
+.input-dark:focus { outline: none; border-color: rgba(255,90,95,0.6); }
+
+/* Force dark background on native <select> dropdowns */
+select.input-dark,
+select.input-dark option {
+  background-color: #1A1A2A;
+  color: #F1F1F1;
+}
+select.input-dark option:checked,
+select.input-dark option:hover {
+  background-color: #2A2A3E;
+  color: #FF5A5F;
+}
+/* Firefox: override default white scrollbar/list bg */
+select.input-dark {
+  color-scheme: dark;
+}
+/* Ensure the select arrow is visible on dark bg */
+select.input-dark {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px !important;
+}
+
+/* ─── Shimmer loading ─── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* page-bg alias for dark */
+.page-bg { background: var(--app-bg); }
